@@ -130,3 +130,38 @@ Listen 80
      ProxyPreserveHost On
 </VirtualHost>
 ```
+### Yaml file to put Http as sidecar in the pod
+* apexohs:v2 is the sidecar , listens on port 7777 and proxy traffic to ORDS apexords:v18 which listens on localhost:8888
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livesqlstg-mt-ohs-deployment
+  labels:
+    name: livesqlstg-service
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+         name: livesqlstg-service
+  template:
+       metadata:
+          labels:
+             name: livesqlstg-service
+       spec:
+         containers:
+           - name: ords
+             image: apexords:v18
+             imagePullPolicy: IfNotPresent
+             ports:
+                - containerPort: 8888
+           - name: ohs
+             image: apexohs:v2
+             imagePullPolicy: IfNotPresent
+             ports:
+                - containerPort: 7777
+         imagePullSecrets:
+            - name: iad-ocir-secret
+         nodeSelector:
+             mthost: livesqlsb
+```
